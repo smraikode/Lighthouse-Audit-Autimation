@@ -1,40 +1,37 @@
-const chai = require('chai');
-const expect = chai.expect;
+const { expect } = require('chai');
 const sinon = require('sinon');
 const supertest = require('supertest');
+const { app } = require('./index');
 
-const app = require('../index').app;
-
-describe('Lighthouse Audit API', () => {
+describe('Lighthouse Audit', () => {
   let request;
 
-  beforeEach(() => {
+  before(() => {
     request = supertest(app);
   });
 
-  it('should return status 204 on successful audit', (done) => {
-    request
-      .get('/')
-      .expect(204)
-      .end((err, res) => {
-        if (err) return done(err);
-        done();
-      });
+  it('should return 204 status code for successful mobile audit', async () => {
+    process.env.IS_MOBILE = 'true';
+    const response = await request.get('/');
+    expect(response.status).to.equal(204);
+    delete process.env.IS_MOBILE;
   });
 
-  it('should return status 500 on audit error', (done) => {
-    // Simulate an error during the audit
-    sinon.stub(console, 'error').throws(new Error('Audit Error'));
+  it('should return 204 status code for successful desktop audit', async () => {
+    process.env.IS_MOBILE = 'false';
+    const response = await request.get('/');
+    expect(response.status).to.equal(204);
+    delete process.env.IS_MOBILE;
+  });
 
-    request
-      .get('/')
-      .expect(500)
-      .end((err, res) => {
-        if (err) return done(err);
+  it('should return 500 status code for failed audit', async () => {
+    // Mock the runLighthouseAudit function to throw an error
+    sinon.stub(app, 'runLighthouseAudit').throws(new Error('Audit error'));
 
-        // Restore the console.error stub
-        console.error.restore();
-        done();
-      });
+    const response = await request.get('/');
+    expect(response.status).to.equal(500);
+
+    // Restore the stubbed function
+    app.runLighthouseAudit.restore();
   });
 });
