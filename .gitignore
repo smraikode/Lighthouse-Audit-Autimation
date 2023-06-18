@@ -1,0 +1,27 @@
+# Node.js
+node_modules/
+package-lock.json
+
+# Logs
+logs
+*.log
+
+# Dependency directories
+puppeteer/.local-chromium/
+temp/
+
+# Environment variables
+.env
+
+# Build artifacts
+dist/
+
+# IDE files
+.vscode/
+.idea/
+.cache/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
