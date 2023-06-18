@@ -37,14 +37,28 @@ TABLE_ID=<your_table_id>
 
 ### Running Locally
 
-To run the application locally, use the following command:
+To run the Lighthouse audit locally, follow these steps:
 
-```bash
-npm start
-```
-This will start the server on the default port (8080) and initiate the website audits.
-We can git http trigger with cURL to check the out put.
-The results will be stored in local JSON files in temp/ folder.
+1. Run the Lighthouse audit by executing the appropriate npm script:
+   - For mobile audit:
+     ```
+     npm run mobile-audit
+     ```
+
+   - For desktop audit:
+     ```
+     npm run desktop-audit
+     ```
+
+   The command will execute the `node index.js` script with the `IS_MOBILE` environment variable set to `true` for mobile audit or `false` for desktop audit. The Lighthouse audit will be performed accordingly.
+
+2. After the audit completes, the results will be saved in the local `temp` directory as JSON files.
+
+You can customize the websites to be audited by updating the `constants.js` file, and you can modify the Lighthouse configuration in the `config.js` file.
+
+Note: Make sure you have the necessary dependencies installed before running the Lighthouse audit locally.
+
+Feel free to modify the scripts or configurations as per your project requirements.
 
 ## Writing Test Cases
 
@@ -64,15 +78,49 @@ The results will be stored in local JSON files in temp/ folder.
 
    **Note:** The tests are executed locally and do not impact the execution of your Cloud Functions.
 
-### Deploying as a Google Cloud Function
+## Deployment
 
-To deploy the application as a Google Cloud Function, use the following command:
+The Lighthouse Audit project provides the flexibility to deploy the Cloud Function for different device types, such as mobile and desktop. Follow the instructions below to deploy the appropriate version of the Cloud Function based on your needs.
 
-```bash
-npm run deploy
+### Deploying the Cloud Function
+
+To deploy the Cloud Function, use the following commands:
+
+#### Deploying for Mobile
+
+```shell
+npm run deploy-mobile
 ```
 
-This will deploy the function to Google Cloud Functions with the specified configuration. The function will be triggered via HTTP and perform the website audits, storing the results in Google BigQuery.
+This command will deploy the Cloud Function with the `isMobile` flag set to `true`. It will execute the lighthouse audit for mobile devices.
+
+#### Deploying for Desktop
+
+```shell
+npm run deploy-desktop
+```
+
+This command will deploy the Cloud Function with the `isMobile` flag set to `false`. It will execute the lighthouse audit for desktop devices.
+
+### Verifying the Deployment
+
+Once the deployment is complete, you can verify the Cloud Function's functionality by accessing the provided URL. The Cloud Function will perform the lighthouse audit for the specified device type (mobile or desktop) and save the results accordingly.
+
+**Note:** Make sure to wait for a few moments after deployment before accessing the Cloud Function URL to allow for the initialization and setup process.
+
+### Cleaning Up
+
+To clean up the deployed Cloud Functions, you can use the following command:
+
+```shell
+gcloud functions delete ceLighthouse --project cybagexl-staging
+```
+
+Running this command will delete the Cloud Function, freeing up the associated resources.
+
+## Conclusion
+
+By following the deployment instructions provided above, you can easily deploy the Lighthouse Audit Cloud Function for different device types and conduct lighthouse audits to gather performance metrics for your websites.
 
 ## Contributing
 
