@@ -19,11 +19,12 @@ dotenv.config();
 const projectId = process.env.PROJECT_ID;
 const datasetId = process.env.DATASET_ID;
 const tableId = process.env.TABLE_ID;
+const isMobile = process.env.IS_MOBILE === 'true'; // Set isMobile based on environment variable
 
 async function runLighthouseAudit() {
   const lighthouseOptions = {
     output: 'json',
-    logLevel: 'info',
+    logLevel: 'error',
     port: 9222,
     chromeFlags: ['--headless', '--disable-dev-shm-usage']
   };
@@ -35,44 +36,45 @@ async function runLighthouseAudit() {
     return;
   }
 
-  for (const isMobile of [true, false]) {
-    const results = [];
-    const deviceType = isMobile ? 'mobile' : 'desktop';
-    const uuid = uuidv1();
+  const deviceType = isMobile ? 'mobile' : 'desktop';
+  const uuid = uuidv1();
+  const results = [];
 
-    for (const website of websites) {
-      const config = getConfigForAuditing(website, isMobile);
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      const { lhr } = await lighthouse(website, {
-        ...lighthouseOptions,
-        port: new URL(browser.wsEndpoint()).port,
-        output: 'json',
-      }, config);
-      await browser.close();
-      lhrFinal = createJSON(lhr, website, deviceType, uuid);
+  for (const website of websites) {
+    const config = getConfigForAuditing(website, isMobile);
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    const { lhr } = await lighthouse(website, {
+      ...lighthouseOptions,
+      port: new URL(browser.wsEndpoint()).port,
+      output: 'json',
+    }, config);
+    await browser.close();
+    lhrFinal = createJSON(lhr, website, deviceType, uuid);
 
+    if (process.env.NODE_ENV === 'production') {
       // Save Cloud Function results in BigQuery
       const bigquery = new BigQuery({ projectId });
       await bigquery.dataset(datasetId).table(tableId).insert(lhrFinal);
 
-      console.log(`Cloud Function Lighthouse audits completed for ${deviceType}. Results saved in BigQuery.`);
-
-      results.push({
-        ...lhrFinal 
-      });
+      console.log(`Results saved in BigQuery.`);
     }
+    console.log(`Cloud Function Lighthouse audits completed for ${website}.`);
 
-    // Save local results in a JSON file
-    if (process.env.NODE_ENV !== 'production') {
-      const timestamp = new Date().toISOString();
-      const filename = `temp/lighthouse-results-${deviceType}-${timestamp}.json`;
-      const filePath = path.join(__dirname, filename);
+    results.push({
+      ...lhrFinal
+    });
+  }
 
-      fs.writeFileSync(filePath, JSON.stringify(results, null, 2));
+  // Save local results in a JSON file
+  if (process.env.NODE_ENV !== 'production') {
+    const timestamp = new Date().toISOString();
+    const filename = `temp/lighthouse-results-${deviceType}-${timestamp}.json`;
+    const filePath = path.join(__dirname, filename);
 
-      console.log(`Local Lighthouse audits completed for ${deviceType}. Results saved in: ${filePath}`);
-    }
+    fs.writeFileSync(filePath, JSON.stringify(results, null, 2));
+
+    console.log(`Local Lighthouse audits completed for ${deviceType}. Results saved in: ${filePath}`);
   }
 }
 
@@ -94,4 +96,4 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-module.exports = {app};
+module.exports = { app };

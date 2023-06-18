@@ -42,8 +42,27 @@ To run the application locally, use the following command:
 ```bash
 npm start
 ```
+This will start the server on the default port (8080) and initiate the website audits.
+We can git http trigger with cURL to check the out put.
+The results will be stored in local JSON files in temp/ folder.
 
-This will start the server on the default port (8080) and initiate the website audits. The results will be stored in Google BigQuery.
+## Writing Test Cases
+
+1. Create test files for your functions in the `test` directory.
+
+2. Use a testing framework like Mocha or Jest to define your test cases.
+
+3. Write test cases to validate the behavior of your functions and ensure they produce the expected results.
+
+4. Run the tests:
+
+   ```bash
+   npm test
+   ```
+
+   The test framework will execute your test cases and provide feedback on the pass/fail status of each test.
+
+   **Note:** The tests are executed locally and do not impact the execution of your Cloud Functions.
 
 ### Deploying as a Google Cloud Function
 

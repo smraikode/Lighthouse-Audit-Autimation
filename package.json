@@ -6,7 +6,11 @@
   "scripts": {
     "install-deps": "npm i && mkdir temp",
     "start": "node index.js",
-    "deploy": "gcloud functions deploy ceLighthouse --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 2048 --source . --gen2"
+    "audit-mobilr": "IS_MOBILE=true node index.js",
+    "audit-desktop": "IS_MOBILE=false node index.js",
+    "deploy-mobile": "gcloud functions deploy mobileLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 2048 --source . --gen2 --set-env-vars IS_MOBILE=true",
+    "deploy-desktop": "gcloud functions deploy desktopLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 2048 --source . --gen2 --set-env-vars IS_MOBILE=false",
+    "test": "mocha"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^5.9.0",
@@ -18,6 +22,10 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@google-cloud/functions-framework": "^3.2.0"
+    "@google-cloud/functions-framework": "^3.2.0",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "sinon": "^15.1.2",
+    "supertest": "^6.3.3"
   }
 }
