@@ -1,4 +1,4 @@
-# Lighthouse Audit
+# Lighthouse Audit Automation
 
 Lighthouse Audit is a Node.js application that performs website audits using Google Lighthouse and stores the results in Google BigQuery. It can be deployed as a Google Cloud Function or run locally.
 
@@ -15,7 +15,7 @@ Before running the application, make sure you have the following installed:
 Clone the repository and navigate to the project directory:
 
 ```bash
-git clone <repository_url>
+git clone https://github.com/smraikode/Lighthouse-Audit-Automation
 cd lighthouse-audit
 ```
 
@@ -57,7 +57,7 @@ This will deploy the function to Google Cloud Functions with the specified confi
 
 ## Contributing
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](<repository_url>).
+Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/smraikode/Lighthouse-Audit-Automation).
 
 ## License
 
