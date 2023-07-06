@@ -113,7 +113,7 @@ Once the deployment is complete, you can verify the Cloud Function's functionali
 To clean up the deployed Cloud Functions, you can use the following command:
 
 ```shell
-gcloud functions delete ceLighthouse --project cybagexl-staging
+gcloud functions delete <function name> --project cybagexl-staging
 ```
 
 Running this command will delete the Cloud Function, freeing up the associated resources.

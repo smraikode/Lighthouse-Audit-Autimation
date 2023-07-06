@@ -6,6 +6,7 @@ const { BigQuery } = require('@google-cloud/bigquery');
 const lighthouse = require('lighthouse');
 const puppeteer = require('puppeteer');
 const dotenv = require('dotenv');
+const { google } = require('googleapis');
 const constants = require('./constants');
 const { getConfigForAuditing } = require('./config');
 const { createJSON } = require('./createJson');
@@ -21,6 +22,38 @@ const datasetId = process.env.DATASET_ID;
 const tableId = process.env.TABLE_ID;
 const isMobile = process.env.IS_MOBILE === 'true'; // Set isMobile based on environment variable
 
+// Google Sheets API credentials
+const credentials = {
+  client_email: process.env.CLIENT_EMAIL,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Replace escaped newline characters
+};
+
+// Google Sheets API scopes
+const scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+
+// Initialize the Google Sheets API client
+const auth = new google.auth.JWT(credentials.client_email, null, credentials.private_key, scopes);
+const sheets = google.sheets({ version: 'v4', auth });
+
+async function getWebsitesFromSpreadsheet() {
+  try {
+    const spreadsheetId = process.env.SPREADSHEET_ID;
+    const range = 'Sheet1!A2:A'; // Assuming the URLs are in column A, starting from row 2
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    const values = response.data.values;
+
+    if (!values || values.length === 0) {
+      console.error('No website URLs found in the spreadsheet.');
+      return [];
+    }
+
+    return values.map((row) => row[0]); // Assuming single column data
+  } catch (error) {
+    console.error('Error retrieving website URLs from the spreadsheet:', error);
+    return [];
+  }
+}
+
 async function runLighthouseAudit() {
   const lighthouseOptions = {
     output: 'json',
@@ -29,10 +62,10 @@ async function runLighthouseAudit() {
     chromeFlags: ['--headless', '--disable-dev-shm-usage']
   };
 
-  const websites = constants.websites;
+  const websites = await getWebsitesFromSpreadsheet();
 
-  if (!websites || !Array.isArray(websites) || websites.length === 0) {
-    console.error('Invalid websites configuration');
+  if (websites.length === 0) {
+    console.error('No websites found for auditing.');
     return;
   }
 
@@ -54,17 +87,12 @@ async function runLighthouseAudit() {
 
     if (process.env.NODE_ENV === 'production') {
       // Save Cloud Function results in BigQuery
-      try {
-        const bigquery = new BigQuery({ projectId });
-        await bigquery.dataset(datasetId).table(tableId).insert(lhrFinal, {'ignoreUnknownValues':true, 'raw':false});
+      const bigquery = new BigQuery({ projectId });
+      await bigquery.dataset(datasetId).table(tableId).insert(lhrFinal);
 
-        console.log(`Results saved in BigQuery.`);
-        console.log(`Lighthouse audits completed for ${website}.`);
-      } catch (err)
-      {
-        console.log(err.errors[0].errors);
-      }
+      console.log(`Results saved in BigQuery.`);
     }
+    console.log(`Cloud Function Lighthouse audits completed for ${website}.`);
 
     results.push({
       ...lhrFinal

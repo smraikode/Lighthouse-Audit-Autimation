@@ -6,10 +6,11 @@
   "scripts": {
     "install-deps": "npm i && mkdir temp",
     "start": "node index.js",
-    "audit-mobilr": "IS_MOBILE=true node index.js",
+    "audit-mobile": "IS_MOBILE=true node index.js",
     "audit-desktop": "IS_MOBILE=false node index.js",
-    "deploy-mobile": "gcloud functions deploy mobileLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 2048 --source . --gen2 --set-env-vars IS_MOBILE=true",
-    "deploy-desktop": "gcloud functions deploy desktopLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 2048 --source . --gen2 --set-env-vars IS_MOBILE=false",
+    "deploy-mobile": "gcloud beta functions deploy mobileLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 4096 --source . --gen2 --cpu 2 --set-env-vars IS_MOBILE=true",
+    "deploy-desktop": "gcloud beta functions deploy desktopLighthouseReport --project cybagexl-staging --trigger-http --timeout 3600s --runtime=nodejs16 --entry-point app --memory 4096 --source . --gen2 --cpu 2 --set-env-vars IS_MOBILE=false",
+    "deploy": "npm run deploy-mobile && npm run deploy-desktop",
     "test": "mocha"
   },
   "dependencies": {

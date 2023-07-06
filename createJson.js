@@ -45,21 +45,45 @@ function createJSON(obj, id, deviceType, uuid) {
     performance: [{
       total_score: obj.categories.performance.score,
       first_contentful_paint: [{
-        raw_value: obj.audits['first-contentful-paint'].rawValue,
-        score: obj.audits['first-contentful-paint'].score
+        score: obj.audits['first-contentful-paint'].score,
+        display_value: obj.audits['first-contentful-paint'].displayValue,
+        numeric_value: obj.audits['first-contentful-paint'].numericValue
       }],
       first_meaningful_paint: [{
-        raw_value: obj.audits['first-meaningful-paint'].rawValue,
-        score: obj.audits['first-meaningful-paint'].score
+        score: obj.audits['first-meaningful-paint'].score,
+        display_value: obj.audits['first-meaningful-paint'].displayValue,
+        numeric_value: obj.audits['first-meaningful-paint'].numericValue
+      }],
+      largest_contentful_paint: [{
+        score: obj.audits['largest-contentful-paint'].score,
+        display_value: obj.audits['largest-contentful-paint'].displayValue,
+        numeric_value: obj.audits['largest-contentful-paint'].numericValue
+      }],
+      total_blocking_time: [{
+        score: obj.audits['total-blocking-time'].score,
+        display_value: obj.audits['total-blocking-time'].displayValue,
+        numeric_value: obj.audits['total-blocking-time'].numericValue
+      }],
+      cumulative_layout_shift: [{
+        score: obj.audits['cumulative-layout-shift'].score,
+        display_value: obj.audits['cumulative-layout-shift'].displayValue,
+        numeric_value: obj.audits['cumulative-layout-shift'].numericValue
       }],
       speed_index: [{
-        raw_value: obj.audits['speed-index'].rawValue,
-        score: obj.audits['speed-index'].score
+        score: obj.audits['speed-index'].score,
+        display_value: obj.audits['speed-index'].displayValue,
+        numeric_value: obj.audits['speed-index'].numericValue
       }],
       page_interactive: [{
-        raw_value: obj.audits.interactive.rawValue,
-        score: obj.audits.interactive.score
-      }]
+        score: obj.audits.interactive.score, 
+        displayValue: obj.audits.interactive.displayValue,
+        numericValue: obj.audits.interactive.numericValue
+      }],
+      server_response_time: [{
+        score: obj.audits['server-response-time'].score,
+        display_value: obj.audits['server-response-time'].displayValue,
+        numeric_value: obj.audits['server-response-time'].numericValue
+      }],
     }],
     pwa: [{
       total_score: obj.categories.pwa.score,
@@ -83,6 +107,13 @@ function createJSON(obj, id, deviceType, uuid) {
       plugins_ok: obj.audits.plugins.score === 1
     }]
   }
+}
+
+function getServerResponseTime(audit) {
+  if (audit && audit.extendedInfo && audit.extendedInfo.value && audit.extendedInfo.value.serverResponseTime) {
+    return audit.extendedInfo.value.serverResponseTime;
+  }
+  return null; // Fallback value if server response time is undefined
 }
 
 module.exports = {

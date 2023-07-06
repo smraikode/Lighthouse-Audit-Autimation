@@ -1,0 +1,72 @@
+app.get('/', (req, res) => {
+  const websites = constants.websites;
+
+  if (!websites || !Array.isArray(websites) || websites.length === 0) {
+    console.error('Invalid websites configuration');
+    return res.sendStatus(500);
+  }
+
+  const promises = [];
+
+  for (const isMobile of [true, false]) {
+    for (const website of websites) {
+      const promise = runLighthouseAudit(website, isMobile);
+      promises.push(promise);
+    }
+  }
+
+  Promise.all(promises)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((error) => {
+      console.error('Error running Lighthouse audits:', error);
+      res.sendStatus(500);
+    });
+});
+
+async function runLighthouseAudit(website, isMobile) {
+  const lighthouseOptions = {
+    output: 'json',
+    logLevel: 'error',
+    port: 9222,
+    chromeFlags: ['--headless', '--disable-dev-shm-usage']
+  };
+
+  const config = getConfigForAuditing(website, isMobile);
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  const { lhr } = await lighthouse(website, {
+    ...lighthouseOptions,
+    port: new URL(browser.wsEndpoint()).port,
+    output: 'json',
+  }, config);
+  await browser.close();
+
+  const deviceType = isMobile ? 'mobile' : 'desktop';
+  const uuid = uuidv1();
+  const lhrFinal = createJSON(lhr, website, deviceType, uuid);
+
+  if (process.env.NODE_ENV === 'production') {
+    // Save Cloud Function results in BigQuery
+    const bigquery = new BigQuery({ projectId });
+    await bigquery.dataset(datasetId).table(tableId).insert(lhrFinal);
+
+    console.log(`Results saved in BigQuery.`);
+  } else {
+    console.log(`Cloud Function Lighthouse audit completed for ${website}.`);
+
+    // Publish the results to Pub/Sub
+    const message = {
+      website,
+      deviceType,
+      lhrFinal,
+    };
+    const dataBuffer = Buffer.from(JSON.stringify(message));
+    await pubsub.topic(topicName).publish(dataBuffer);
+
+    console.log(`Results published to Pub/Sub.`);
+  }
+
+  return lhrFinal;
+}
